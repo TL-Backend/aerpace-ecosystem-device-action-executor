@@ -1,0 +1,6 @@
+[submodule "src/services/aerpace-ecosystem-device-action-executor"]
+	path = src/services/aerpace-ecosystem-device-action-executor
+	url = git@github.com:TL-Backend/aerpace-ecosystem-device-action-executor.git
+[submodule "src/services/aerpace-ecosystem-backend-db"]
+	path = src/services/aerpace-ecosystem-backend-db
+	url = git@github.com:TL-Backend/aerpace-ecosystem-backend-db.git
