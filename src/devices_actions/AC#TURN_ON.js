@@ -13,6 +13,7 @@ const {
 } = require("../utils/constant");
 const { logger } = require("../utils/logger");
 const { statusCodes } = require("../utils/statusCode");
+let action = "AC#TURN_ON";
 
 module.exports = {
   authorizer: async ({ userId, deviceId, action }) => {
@@ -80,7 +81,7 @@ module.exports = {
     }
   },
 
-  inputValidator: (action, parameter) => {
+  inputValidator: ({ parameter }) => {
     try {
       const parameterNames = Object.keys(parameter);
       const actionParameterNames = Object.keys(actionParameters[action]);

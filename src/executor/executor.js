@@ -41,7 +41,7 @@ exports.execute = async (req, res, next) => {
       success: validatorSuccess,
       message: validatorMessage,
       errorCode: validatorCode,
-    } = inputValidator(action, parameter);
+    } = inputValidator({ parameter });
     if (!validatorSuccess) {
       return errorResponse({
         req,
@@ -51,7 +51,7 @@ exports.execute = async (req, res, next) => {
       });
     }
 
-    const { success, message, data, errorCode } = executor(
+    const { success, message, errorCode } = executor(
       parameter,
       authorizeData,
       deviceId,
