@@ -89,8 +89,7 @@ module.exports = {
         };
       }
 
-      for (let index = 0; index < parameterNames.length; index++) {
-        const element = parameterNames[index];
+      for (let element of parameterNames) {
         if (
           !actionParameters[action] ||
           !actionParameterNames.includes(element) ||
