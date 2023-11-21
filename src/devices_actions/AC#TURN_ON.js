@@ -1,65 +1,60 @@
 const {
-  sequelize,
-  aergov_devices,
-} = require("../services/aerpace-ecosystem-backend-db/src/databases/postgresql/models");
-const {
-  fetchUserQuery,
-  checkPrivileges,
-} = require("../executor/executor.query");
-const {
   errorResponses,
   actionParameters,
   successResponses,
 } = require("../utils/constant");
 const { logger } = require("../utils/logger");
 const { statusCodes } = require("../utils/statusCode");
+const {
+  fetchUserData,
+  fetchDeviceData,
+  validateUser,
+} = require("../utils/common");
 let action = "AC#TURN_ON";
 
 module.exports = {
   authorizer: async ({ userId, deviceId, action }) => {
     try {
-      const userData = await sequelize.query(fetchUserQuery, {
-        replacements: {
-          user_id: userId,
-        },
-      });
-
-      if (!userData[0][0]) {
+      const {
+        success: fetchUserSuccess,
+        errorCode: fetchUserCode,
+        message: fetchUserMessage,
+        data: userData,
+      } = await fetchUserData({ userId });
+      if (!fetchUserSuccess) {
         return {
           success: false,
-          errorCode: statusCodes.STATUS_CODE_UNAUTHORIZED,
-          message: errorResponses.NO_ACCESS,
+          errorCode: fetchUserCode,
+          message: fetchUserMessage,
           data: {},
         };
       }
 
-      const deviceData = await aergov_devices.findOne({
-        where: {
-          id: deviceId,
-        },
-      });
-
-      if (!deviceData) {
+      const {
+        success: fetchDeviceSuccess,
+        errorCode: fetchDeviceCode,
+        message: fetchDeviceMessage,
+        data: deviceData,
+      } = await fetchDeviceData({ deviceId });
+      if (!fetchDeviceSuccess) {
         return {
           success: false,
-          errorCode: statusCodes.STATUS_CODE_DATA_NOT_FOUND,
-          message: errorResponses.DEVICE_NOT_FOUND,
+          errorCode: fetchDeviceCode,
+          message: fetchDeviceMessage,
           data: {},
         };
       }
 
-      const validUser = await sequelize.query(checkPrivileges, {
-        replacements: {
-          device_id: deviceId,
-          action_identifier: action,
-          user_type: userData[0][0].user_type,
-        },
-      });
-      if (!validUser[0][0]) {
+      const {
+        success: validateUserSuccess,
+        errorCode: validateUserCode,
+        message: validateUserMessage,
+      } = await validateUser({ deviceId, userData, action });
+      if (!validateUserSuccess) {
         return {
           success: false,
-          errorCode: statusCodes.STATUS_CODE_UNAUTHORIZED,
-          message: errorResponses.NO_ACCESS,
+          errorCode: validateUserCode,
+          message: validateUserMessage,
           data: {},
         };
       }
@@ -67,7 +62,7 @@ module.exports = {
       return {
         success: true,
         data: {
-          userData,
+          deviceData,
         },
       };
     } catch (err) {
@@ -81,11 +76,11 @@ module.exports = {
     }
   },
 
-  inputValidator: ({ parameter }) => {
+  inputValidator: ({ parameters }) => {
     try {
-      const parameterNames = Object.keys(parameter);
-      const actionParameterNames = Object.keys(actionParameters[action]);
-      if (!parameterNames.length) {
+      const parameterNames = Object.keys(parameters);
+      const actionParameterNames = Object.keys(actionParameters[action] || {});
+      if (actionParameterNames.length && !parameterNames.length) {
         return {
           success: false,
           message: errorResponses.PARAMETERS_REQUIRED,
@@ -99,7 +94,7 @@ module.exports = {
         if (
           !actionParameters[action] ||
           !actionParameterNames.includes(element) ||
-          typeof parameter[element] !== actionParameters[action][element]
+          typeof parameters[element] !== actionParameters[action][element]
         ) {
           return {
             success: false,
@@ -123,7 +118,7 @@ module.exports = {
     }
   },
 
-  executor: (parameter, userData, deviceId) => {
+  executor: ({ parameters, userData, deviceId }) => {
     // IOT IMPLEMENTATION
     return {
       success: true,

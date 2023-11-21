@@ -6,7 +6,7 @@ const { statusCodes } = require("../utils/statusCode");
 exports.execute = async (req, res, next) => {
   try {
     const userId = req.query.userId;
-    const { action, device_id: deviceId, parameter } = req.body;
+    const { action, device_id: deviceId, parameters } = req.body;
     let actionConfig;
 
     try {
@@ -41,7 +41,7 @@ exports.execute = async (req, res, next) => {
       success: validatorSuccess,
       message: validatorMessage,
       errorCode: validatorCode,
-    } = inputValidator({ parameter });
+    } = inputValidator({ parameters });
     if (!validatorSuccess) {
       return errorResponse({
         req,
@@ -51,11 +51,11 @@ exports.execute = async (req, res, next) => {
       });
     }
 
-    const { success, message, errorCode } = executor(
-      parameter,
+    const { success, message, errorCode } = executor({
+      parameters,
       authorizeData,
       deviceId,
-    );
+    });
     if (!success) {
       return errorResponse({
         req,
